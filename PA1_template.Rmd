@@ -8,10 +8,38 @@ output:
 
 ## Loading and preprocessing the data
 
+The raw data file "activity.zip" should be in the working directory:
+
+```{r}
+
+unzip("activity.zip")
+rawActiv <- read.csv("activity.csv")
+
+# converting the date factor to a date allows ggplot
+# to handle it better automatically
+
+require(lubridate)
+
+rawActiv$date <-ymd(rawActiv$date)
+
+```
 
 
 ## What is mean total number of steps taken per day?
 
+```{r}
+require(dplyr)
+require(ggplot2)
+
+meanSteps <- rawActiv %>% group_by(date) %>% 
+    summarise_each(funs(sum, mean), steps)
+
+p <- ggplot(meanSteps, aes(x = date, y = sum))
+p <- p + geom_bar(stat="identity") + 
+    ggtitle("Total Steps by Date") + 
+    xlab("Date") + ylab("Total Steps")
+p
+```
 
 
 ## What is the average daily activity pattern?
