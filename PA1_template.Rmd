@@ -14,9 +14,15 @@ The raw data file "activity.zip" should be in the working directory:
 
 unzip("activity.zip")
 rawActiv <- read.csv("activity.csv")
+str(rawActiv)
 
-# converting the date factor to a date allows ggplot
-# to handle it better automatically
+```
+
+### Preprocessing
+
+Use the Lubridate R package to convert the date "factor" into a date which allows ggplot to handle it better automatically.
+
+```{r}
 
 require(lubridate)
 
@@ -27,12 +33,17 @@ rawActiv$date <-ymd(rawActiv$date)
 
 ## What is mean total number of steps taken per day?
 
+### Make a histogram of the total number of steps taken each day
+
 ```{r}
+
+# I will use dplyr to transform the data & ggplot2 for plotting.
+
 require(dplyr)
 require(ggplot2)
 
 meanSteps <- rawActiv %>% group_by(date) %>% 
-    summarise_each(funs(sum, mean), steps)
+    summarise_each(funs(sum, mean, median), steps)
 
 p <- ggplot(meanSteps, aes(x = date, y = sum))
 p <- p + geom_bar(stat="identity") + 
@@ -41,13 +52,67 @@ p <- p + geom_bar(stat="identity") +
 p
 ```
 
+### Calculate and report the mean and median total number of steps taken per day
+
+```{r}
+
+q <- ggplot(meanSteps, aes(x = date, y = mean))
+q <- q + geom_bar(stat="identity") + 
+    ggtitle("Mean Steps by Date") + 
+    xlab("Date") + ylab("Mean Steps")
+
+r <- ggplot(meanSteps, aes(x = date, y = median))
+r <- r + geom_bar(stat="identity") + 
+    ggtitle("Median Steps by Date") + 
+    xlab("Date") + ylab("Median Steps")
+
+q
+r
+```
+
 
 ## What is the average daily activity pattern?
 
+### Make a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis)
 
+```{r}
+require(dplyr)
+require(ggplot2)
+
+# will convert all NAs to 0
+
+rawActiv0 <- rawActiv %>% 
+    mutate(steps = ifelse(is.na(steps), 0, steps))
+    
+meanInterval <- rawActiv0 %>% group_by(interval) %>% 
+    summarise_each(funs(mean), steps)
+
+s <- ggplot(meanInterval, aes(y = steps, x = interval))
+
+s + geom_line() + ggtitle("Mean Steps by Interval") + 
+    xlab("Day Time Interval") + ylab("Mean Steps")
+```
+
+### Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
+
+```{r}
+meanInterval[meanInterval$steps == max(meanInterval$steps),]
+```
 
 ## Imputing missing values
 
 
 
 ## Are there differences in activity patterns between weekdays and weekends?
+
+
+```{r}
+
+# use lubridate wday function to add a day of the week variable
+# Sun < Mon < Tues < Wed < Thurs < Fri < Sat
+
+rawActiv <- rawActiv %>% mutate(dayOfWeek = wday(date, label=T))
+
+
+```
+
